@@ -85,6 +85,7 @@ export default function App() {
                   </Stack.Navigator>
                 )}
               </Tab.Screen>
+              
             </Tab.Navigator>
           )}
         </Stack.Screen>

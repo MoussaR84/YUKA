@@ -24,100 +24,69 @@ import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-community/async-storage';
-
+import {ratingProduct,ratingProductComment,ratingScoreText} from  '../utilis/index';
 
 export default function ProductScreen({ route }) {
   const id = route.params.itemId;
   const [isLoading, setIsLoading] = useState(true);
-  const [data, setData] = useState({});
-  
+  const [product, setProduct] = useState({});
+
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log('fetchData called')
       try {
         const response = await axios.get(
           `https://world.openfoodfacts.org/api/v0/product/${id}.json`
         );
-        setData(response.data);
-        // console.log(id);
-        // console.log(data);
+        setProduct(response.data.product);
+        const product_name=response.data.product.product_name;
+        const brands=response.data.product.brands;
+        const image_url=response.data.product.image_url;
+        const nutrition_grade_fr=response.data.product.nutrition_grade_fr;
         // on recupere les differentes infos du tableau 
-        const product= await AsyncStorage.getItem("product")
-        // on met tout les produits sous forme de tableau 
-        const arrayProducts=JSON.parse(product)
-        // on copie un nouveau tableau et on va push dedans 
-        const newProduct=[...arrayProducts]
-        newProduct.push({name:data.product.product_name,brands:data.product.brands,image:data.product.image_url})
-        console.log([newProduct]);
-        
-        //on transforme en string
-        const stringNewProducts=JSON.stringify(newProduct);
-        AsyncStorage.setItem("products",stringNewProducts)
+        const rawSavedHistory= await AsyncStorage.getItem("productHistory");
+        let savedHistoryinStorage;
+        // console.log('rawSavedHistory',rawSavedHistory);
+          if(rawSavedHistory !==null){
+        savedHistoryinStorage= JSON.parse(rawSavedHistory);
+        // console.log('savedHistoryinStorage',savedHistoryinStorage);
 
-        console.log(product);
+        
+          }else {
+            savedHistoryinStorage=[];
+          }
+        const newHistory =[...savedHistoryinStorage, {product_name, brands,image_url,nutrition_grade_fr}]
+        // console.log('newHistory',newHistory);
+        // //on transforme en string
+        AsyncStorage.setItem("productHistory",JSON.stringify(newHistory));
 
     
         setIsLoading(false);
       } catch (error) {
-        console.log(error);
+        console.log('error fetchData',error);
       }
     };
     fetchData();
   }, []);
 
-  const ratingProduct = () => {
-    if (data.product.nutrition_grade_fr === "a") {
-      return colors.green;
-    } else if (data.product.nutrition_grade_fr === "b") {
-      return colors.black;
-    } else if (data.product.nutrition_grade_fr === "c") {
-      return colors.red;
-    } else if (data.product.nutrition_grade_fr === "d") {
-      return colors.brown;
-    } else if (data.product.nutrition_grade_fr === "e") {
-      return colors.black;
-    } else {
-      return colors.grey;
-    }
-  };
 
-  const ratingProductComment = () => {
-    if (data.product.nutrition_grade_fr === "a") {
-      return "Excellent";
-    } else if (data.product.nutrition_grade_fr === "b") {
-      return "Satisfaisant";
-    } else if (data.product.nutrition_grade_fr === "c") {
-      return "Bon";
-    } else if (data.product.nutrition_grade_fr === "d") {
-      return "Mauvais";
-    } else if (data.product.nutrition_grade_fr === "e") {
-      return "Médiocre";
-    } else {
-      return "pas enregistré"
-      
-    }
-    
-  };
 
-  const ratingScoreText = () => {
-    if (data.product.nutrition_grade_fr === "a") {
-      return "100";
-    } else if (data.product.nutrition_grade_fr === "b") {
-      return "80";
-    } else if (data.product.nutrition_grade_fr === "c") {
-      return "70";
-    } else if (data.product.nutrition_grade_fr === "d") {
-      return "30";
-    } else {
-      return "10";
-      // } else {
-      //   ("Données non disponible");
-      //   // alert("not registred");
+  useEffect(() => {
+    const debugFunction = async()=>{
+      const debug=await JSON.parse(AsyncStorage.getItem("productHistory"));
+      console.log('historique clean dans asyncstorage?',debug);
     }
-  };
+
+    debugFunction();
+  },[])
+
+
+
+
 
   const isBioorNot = () => {
-    if (data.product.labels_tags[0] === "en:organic") {
+    if (product.labels_tags[0] === "en:organic") {
       return "Produit Biologique";
     } else {
       return "Produit non Biologique";
@@ -125,7 +94,7 @@ export default function ProductScreen({ route }) {
   };
 
   const isBioorNotColor = () => {
-    if (data.product.labels_tags[0] === "en:organic") {
+    if (product.labels_tags[0] === "en:organic") {
       return colors.green;
     } else {
       return colors.grey;
@@ -133,11 +102,11 @@ export default function ProductScreen({ route }) {
   };
 
   const textProteine = () => {
-    if (data.product.nutriscore_data.proteins_value >= 10) {
+    if (product.nutriscore_data.proteins_value >= 10) {
       return "Excellente quantité";
-    } else if (data.product.nutriscore_data.proteins_value >= 5) {
+    } else if (product.nutriscore_data.proteins_value >= 5) {
       return "Quantité moyenne";
-    } else if (data.product.nutriscore_data.proteins_value < 3) {
+    } else if (product.nutriscore_data.proteins_value < 3) {
       return "Faible quantité";
     } else {
       return "Non renseigné";
@@ -147,23 +116,11 @@ export default function ProductScreen({ route }) {
   
 
   const ratingProteineCircle = () => {
-    if (data.product.nutriscore_data.proteins_value >= 10) {
+    if (product.nutriscore_data.proteins_value >= 10) {
       return colors.green;
-    } else if (data.product.nutriscore_data.proteins_value >= 5) {
+    } else if (product.nutriscore_data.proteins_value >= 5) {
       return colors.orange;
-    } else if (data.product.nutriscore_data.proteins_value <= 3) {
-      return colors.red;
-    } else {
-      return colors.grey;
-    }
-  };
-
-  const ratingFibre = () => {
-    if (data.product.fiber_value >= 1) {
-      return colors.green;
-    } else if (data.product.fiber_value >= 0.5) {
-      return colors.orange;
-    } else if (data.product.proteins_value <= 0.5) {
+    } else if (product.nutriscore_data.proteins_value <= 3) {
       return colors.red;
     } else {
       return colors.grey;
@@ -171,11 +128,11 @@ export default function ProductScreen({ route }) {
   };
 
   const ratingFibreCircle = () => {
-    if (data.product.fiber_value >= 1) {
+    if (product.fiber_value >= 1) {
       return colors.green;
-    } else if (data.product.fiber_value >= 0.5) {
+    } else if (product.fiber_value >= 0.5) {
       return colors.orange;
-    } else if (data.product.proteins_value <= 0.5) {
+    } else if (product.proteins_value <= 0.5) {
       return colors.red;
     } else {
       return colors.grey;
@@ -183,11 +140,11 @@ export default function ProductScreen({ route }) {
   };
 
   const fiberComment = () => {
-    if (data.product.nutriments.fiber >= 5) {
+    if (product.nutriments.fiber >= 5) {
       return "Riche en fibres";
-    } else if (data.product.nutriments.fiber >= 3) {
+    } else if (product.nutriments.fiber >= 3) {
       return "quantités de fibres satisfaisante";
-    } else if (data.product.nutriments.fiber >= 1) {
+    } else if (product.nutriments.fiber >= 1) {
       return "Quelques fibres";
     } else {
       return "fibres non présentes";
@@ -199,13 +156,13 @@ export default function ProductScreen({ route }) {
 
 // O 160 360 560 800
 
-if (data.product.nutriments["energy-kcal_value"] <= 800) {
+if (product.nutriments["energy-kcal_value"] <= 800) {
   return "Extremement Calorique";
-} else if (data.product.nutriments["energy-kcal_value"] <= 560) {
+} else if (product.nutriments["energy-kcal_value"] <= 560) {
   return "Très calorique";
-} else if (data.product.nutriments["energy-kcal_value"] <= 360) {
+} else if (product.nutriments["energy-kcal_value"] <= 360) {
   return "Riche en calorie";
-} else if (data.product.nutriments["energy-kcal_value"] <= 160){
+} else if (product.nutriments["energy-kcal_value"] <= 160){
  return "Peu calorique";
 }else{
   return "Produit non enrregistré"
@@ -218,13 +175,13 @@ const caloriecirclecolor=()=>{
 
   // O 160 360 560 800
   
-  if (data.product.nutriments["energy-kcal_value"] <= 800) {
+  if (product.nutriments["energy-kcal_value"] <= 800) {
     return colors.red;
-  } else if (data.product.nutriments["energy-kcal_value"] <= 560) {
+  } else if (product.nutriments["energy-kcal_value"] <= 560) {
     return colors.orange;
-  } else if (data.product.nutriments["energy-kcal_value"] <= 360) {
+  } else if (product.nutriments["energy-kcal_value"] <= 360) {
     return colors.greenLight;
-  } else if (data.product.nutriments["energy-kcal_value"] <= 160){
+  } else if (product.nutriments["energy-kcal_value"] <= 160){
    return colors.green;
   }else{
     return "Produit non enrregistré",colors.grey
@@ -234,11 +191,11 @@ const caloriecirclecolor=()=>{
 
 
   const satfatCircle = () => {
-    if (data.product.nutriments["saturated-fat"] >= 1) {
+    if (product.nutriments["saturated-fat"] >= 1) {
       return colors.green;
-    } else if (data.product.nutriments["saturated-fat"] >= 10) {
+    } else if (product.nutriments["saturated-fat"] >= 10) {
       return colors.orange;
-    } else if (data.product.nutriments["saturated-fat"] >= 20) {
+    } else if (product.nutriments["saturated-fat"] >= 20) {
       return colors.red;
     } else {
       return colors.grey;
@@ -247,11 +204,11 @@ const caloriecirclecolor=()=>{
 
   const satfatComment = () => {
 
-    if (data.product.nutriments["saturated-fat"] >= 1) {
+    if (product.nutriments["saturated-fat"] >= 1) {
       return "Peu de graisses saturées";
-    } else if (data.product.nutriments["saturated-fat"]>= 10) {
+    } else if (product.nutriments["saturated-fat"]>= 10) {
       return "graisses saturées en quantité";
-    } else if (data.product.nutriments["saturated-fat"]>= 20) {
+    } else if (product.nutriments["saturated-fat"]>= 20) {
       return "graisses saturées en quantité";
     } else {
       return colors.grey;
@@ -261,9 +218,9 @@ const caloriecirclecolor=()=>{
 
 
   const sugarCircle=()=>{
-    if (data.product.nutrient_levels=== "low") {
+    if (product.nutrient_levels=== "low") {
       return colors.green;
-    } else if (data.product.nutrient_levels==="high") {
+    } else if (product.nutrient_levels==="high") {
       return colors.red;
     } else {
       return colors.grey;
@@ -271,16 +228,19 @@ const caloriecirclecolor=()=>{
   }
 
   const sugarComment=()=>{
-    if (data.product.nutrient_levels=== "low") {
+    if (product.nutrient_levels=== "low") {
       return "Faible quantité";
-    } else if (data.product.nutrient_levels==="high") {
+    } else if (product.nutrient_levels==="high") {
       return "forte quantité";
     } else {
       return "données inaccessibles";
     }
   }
 
-  
+  // const nutriscoreproteinevalue=()=>{
+  //   (product.nutriscore_data.proteins_value=== undefined ?"pas de protéines":"g")
+
+  // }
 
 
 
@@ -295,21 +255,21 @@ const caloriecirclecolor=()=>{
         <View style={styles.product}>
             <Image
               style={{ height: 100, width: 80, borderRadius: 10 }}
-              source={{ uri: data.product.image_url }}
+              source={{ uri: product.image_url }}
             />
           </View>
           <View style={styles.presentation}>
-            <Text style={styles.nameProduct}>{data.product.product_name}</Text>
-            <Text style={styles.brand}>{data.product.brands}</Text>
+            <Text style={styles.nameProduct}>{product.product_name}</Text>
+            <Text style={styles.brand}>{product.brands}</Text>
             
             <FontAwesome
               name="circle"
               size={24}
               style={styles.circle}
-              color={ratingProduct()}
+              color={ratingProduct(product,colors)}
             />
-            <Text style={styles.ratingScoreText}>{ratingScoreText()}/100</Text>
-            <Text style={styles.ratingprod}>{ratingProductComment()}</Text>
+            <Text style={styles.ratingScoreText}>{ratingScoreText(product)}/100</Text>
+            <Text style={styles.ratingprod}>{ratingProductComment(product)}</Text>
           </View>
 
           
@@ -318,7 +278,7 @@ const caloriecirclecolor=()=>{
         <View style={styles.qualityTitle}>
           <Text style={styles.qualite}>Qualités</Text>
           <Text style={styles.portion}>
-            Pour {data.product.nutrition_data_prepared_per}
+            Pour {product.nutrition_data_prepared_per}
           </Text>
         </View>
 
@@ -358,8 +318,8 @@ const caloriecirclecolor=()=>{
           <View style={styles.proteinevaluecircle}>
             
            <View style={styles.proteinesgrammeandvalue}>
-           <Text>{data.product.nutriscore_data.proteins_value}</Text>
-          <Text>{data.product.nutriments.proteins_unit}</Text>
+           {/* <Text>{product.nutriscore_data.proteins_value}</Text> */}
+          <Text>{product.nutriments.proteins_unit}</Text>
             </View> 
           
           <FontAwesome
@@ -394,8 +354,8 @@ const caloriecirclecolor=()=>{
           
 
             <View style={styles.fibregramandvalue}>
-            <Text>{data.product.nutriments.fiber}</Text>
-           <Text>{data.product.nutriments.fiber_unit}</Text> 
+            <Text>{product.nutriments.fiber}</Text>
+           <Text>{product.nutriments.fiber_unit}</Text> 
             </View>
             
            <FontAwesome
@@ -431,8 +391,8 @@ const caloriecirclecolor=()=>{
             </View>
             <View style={styles.calorievaluecircle}>
             <View style={styles.caloriegramandvalue}>
-            <Text>{data.product.nutriments["energy-kcal_value"]}</Text>
-            <Text>{data.product.nutriments["energy-kcal_unit"]}</Text>
+            <Text>{product.nutriments["energy-kcal_value"]}</Text>
+            <Text>{product.nutriments["energy-kcal_unit"]}</Text>
             </View> 
             <FontAwesome
             name="circle"
@@ -465,8 +425,8 @@ const caloriecirclecolor=()=>{
         <View style={styles.fatsatvalueandcircle}>
 
             <View style={styles.fatsatgrammeandvalue}>
-            <Text>{data.product.nutriments["saturated-fat"]}</Text>
-            <Text>{data.product.nutriments["saturated-fat_unit"]}</Text> 
+            <Text>{product.nutriments["saturated-fat"]}</Text>
+            <Text>{product.nutriments["saturated-fat_unit"]}</Text> 
             </View>
             <FontAwesome
               name="circle"
@@ -496,8 +456,8 @@ const caloriecirclecolor=()=>{
             </View>
             <View style={styles.sugarvalueandcircle}>
               <View style={styles.sugargramandvalue}>
-              <Text>{data.product.nutriments.sugars_value}</Text>
-              <Text>{data.product.nutriments.sugars_unit}</Text>
+              <Text>{product.nutriments.sugars_value}</Text>
+              <Text>{product.nutriments.sugars_unit}</Text>
               </View>
             
             
@@ -513,7 +473,7 @@ const caloriecirclecolor=()=>{
           
             </View>
           </View>
-          {/* <Button
+          <Button
           title="Favoris"
          
         />
@@ -522,8 +482,8 @@ const caloriecirclecolor=()=>{
             navigation.navigate("Favoris");
           }}
         >
-          <Text>Ajouter au favoris</Text>
-        </TouchableOpacity> */}
+          
+        </TouchableOpacity> 
           </View>
           </SafeAreaView>
       </ScrollView>
@@ -611,6 +571,7 @@ flexDirection:"row",
 alignItems:"flex-start",
 justifyContent: "space-between",
 
+
  },
 
  biocontener:{
@@ -620,6 +581,7 @@ justifyContent: "space-between",
    justifyContent: "space-between",
    borderBottomColor: "grey",
    borderBottomWidth: 1,
+   
    
 
  },

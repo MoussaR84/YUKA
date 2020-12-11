@@ -1,4 +1,3 @@
-import { StatusBar } from "expo-status-bar";
 import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
@@ -11,6 +10,7 @@ import {
   SafeAreaView,
   Button
 } from "react-native";
+import { StatusBar } from "expo-status-bar";
 import { color, set } from "react-native-reanimated";
 import axios from "axios";
 import { TouchableOpacity } from "react-native-gesture-handler";
@@ -23,76 +23,117 @@ import { SimpleLineIcons } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
+import {ratingScoreText ,ratingProductComment}  from '../utilis/index';
 import AsyncStorage from '@react-native-community/async-storage';
-
 
 export default function ProductSScreen({ route }) {
   const[id,setId]=useState();
+  const [productHistory, setProductHistory] = useState([]);
+  useEffect(() => {
+    const fetchProductHistory = async () => {
+      const rawSavedHistory= await AsyncStorage.getItem("productHistory");
+      if(rawSavedHistory !==null){
+        setProductHistory(JSON.parse(rawSavedHistory));
+      }
+    }
+    fetchProductHistory();
+  },[])
 
-  // on va utiliser l id le mettre dans un tableau 
-  
-  
+
+  console.log('productHistory',productHistory);
+
+  // console.log(nutrition_grade_fr);
+  // const ratingProduct = () => {
+  //   if (nutrition_grade_fr === "a") {
+  //     return colors.green;
+  //   } else if (nutrition_grade_fr === "b") {
+  //     return colors.black;
+  //   } else if (nutrition_grade_fr === "c") {
+  //     return colors.red;
+  //   } else if (nutrition_grade_fr === "d") {
+  //     return colors.brown;
+  //   } else if (nutrition_grade_fr === "e") {
+  //     return colors.black;
+  //   } else {
+  //     return colors.grey;
+  //   }
+  // };
+
+
+  // const ratingProductComment = () => {
+  //   {item.nutrition_grade_fr ==="a"
+  //   ? "excellent":item.nutrition_grade_fr ==="b"?
+  //   "satisfaisant":item.nutrition_grade_fr ==="c"?
+  //   "bon":item.nutrition_grade_fr ==="d" ? 
+  //   "mauvais" :item.nutrition_grade_fr ==="e"?
+  //   "médiocre" : "pas enregistré données inaccessibles"}
+  // };
  
-  
-    // Fetch the token from storage then navigate to our appropriate place
-    
-  
 
-  return (
+return (
 
     <View>
-      <Text>
-        machin
-      </Text>
+   {productHistory.map(item=>{
+ return (
+     <ScrollView>
+      <SafeAreaView style={styles.safeAreaView}>
+        <View style={styles.contenaireProduct}>
+        <View style={styles.card}>
+        <View style={styles.product}>
+            <Image
+              style={{ height: 100, width: 80, borderRadius: 10 }}
+              source={{ uri: item.image_url }}
+            />
+          </View>
+          <View style={styles.presentation}>
+            <Text style={styles.nameProduct}>{item.product_name}</Text>
+            <Text style={styles.brand}>{item.brands}</Text>
+            
+            <FontAwesome
+              name="circle"
+              size={24}
+              style={styles.circle}
+              
+              color={
+                item.nutrition_grade_fr ==="a"
+                ? colors.green : item.nutrition_grade_fr ==="b"?
+                colors.orange :item.nutrition_grade_fr ==="c"?
+                colors.red : item.nutrition_grade_fr ==="d" ? 
+                colors.brown :item.nutrition_grade_fr ==="e"?
+                colors.black : colors.grey
+              }
+            />
+            {/* <Text style={styles.ratingScoreText}>{ratingProductComment = () => {
+    {item.nutrition_grade_fr ==="a"
+    ? "excellent":item.nutrition_grade_fr ==="b"?
+    "satisfaisant":item.nutrition_grade_fr ==="c"?
+    "bon":item.nutrition_grade_fr ==="d" ? 
+    "mauvais" :item.nutrition_grade_fr ==="e"?
+    "médiocre" : "pas enregistré données inaccessibles"}
+  }}
+            
+            /100</Text>
+            <Text style={styles.ratingprod}>{ratingProductComment()}</Text> */} 
+          </View>
+        </View> 
+            </View>
+         
+          </SafeAreaView>
+      </ScrollView>
+   
+   )
+
+   })}
     </View>
   ) 
 }
   
 
-    
-    //   * <ScrollView>
-    //   <SafeAreaView style={styles.safeAreaView}>
-    //     <View style={styles.contenaireProduct}>
-    //     <View style={styles.card}>
-    //     <View style={styles.product}>
-    //         <Image
-    //           style={{ height: 100, width: 80, borderRadius: 10 }}
-    //           source={{ uri: data.product.image_url }}
-    //         />
-    //       </View>
-    //       <View style={styles.presentation}>
-    //         <Text style={styles.nameProduct}>{data.product.product_name}</Text>
-    //         <Text style={styles.brand}>{data.product.brands}</Text>
-            
-    //         <FontAwesome
-    //           name="circle"
-    //           size={24}
-    //           style={styles.circle}
-    //           color={ratingProduct()}
-    //         />
-    //         <Text style={styles.ratingScoreText}>{ratingScoreText()}/100</Text>
-    //         <Text style={styles.ratingprod}>{ratingProductComment()}</Text>
-    //       </View>
-
-          
-    //     </View>
-
-        
-          
-    //         </View>
-         
-    //       </SafeAreaView>
-    //   </ScrollView>
-    // </>
-  
-
-// } */}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    alignItems: "center",
+    alignItems:"flex-start",
     justifyContent: "center",
   },
 
@@ -107,16 +148,15 @@ const styles = StyleSheet.create({
     borderBottomColor: "grey",
     borderBottomWidth: 5,
     flex:1,
-    alignContent:"flex-end",
+    alignItems:"flex-start",
     flexDirection: "row",
     marginTop:10,
     justifyContent: "space-between",
-    height:160,
+    height:120,
     
     
   },
 
-  
     presentation: {
     alignItems: "center",
     marginBottom: 60,
@@ -141,6 +181,8 @@ const styles = StyleSheet.create({
   color:"grey",
   
 
+  
+
   },
   ratingScoreText: {
     fontWeight: "bold",
@@ -148,7 +190,7 @@ const styles = StyleSheet.create({
   },
   
   product: {
-    marginBottom: 50,
+    marginBottom: 40,
    
     
   },
